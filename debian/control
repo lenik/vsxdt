@@ -1,0 +1,21 @@
+Source: vscode-devtools
+Section: utils
+Priority: optional
+Maintainer: Lenik <vscode-devtools@bodz.net>
+Build-Depends: debhelper-compat (= 13), nodejs, npm, ca-certificates
+Standards-Version: 4.6.0
+Homepage: https://github.com/lenik/vscode-devtools
+Rules-Requires-Root: no
+
+Package: vscode-devtools
+Architecture: all
+Depends:
+    ${misc:Depends},
+    nodejs
+Description: VS Code extension for JS eval and Chrome CDP input injection
+ vscode-devtools provides two developer tools for VS Code:
+ .
+  - Eval Selection: executes selected JavaScript and appends output inline.
+  - Input Inject Panel: sends key sequences to a Chrome tab via CDP.
+ .
+ This package builds extension artifacts from TypeScript sources.
