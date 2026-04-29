@@ -1,6 +1,0 @@
-vscode-devtools (0.0.1) unstable; urgency=medium
-
-  * Refresh packaging metadata for TypeScript VS Code extension workflow.
-  * Update README and Chinese README for actual extension behavior.
- 
- -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 15 Apr 2026 00:00:00 +0000

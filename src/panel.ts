@@ -11,7 +11,7 @@ export class InputInjectPanel {
     }
 
     this.panel = vscode.window.createWebviewPanel(
-      "devtoolsInputInject",
+      "vsxdtInputInject",
       "Input Inject",
       vscode.ViewColumn.Beside,
       {

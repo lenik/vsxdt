@@ -1,20 +1,20 @@
-# vscode-devtools
+# vsxdt
 
-`vscode-devtools` 是一个用于浏览器自动化与快速 JS 评估的 VS Code 扩展。
+`vsxdt` 是一个用于浏览器自动化与快速 JS 评估的 VS Code 扩展。
 
 ## 功能
 
-- **Eval Selection**（`devtools.evalSelection`）：
+- **Eval Selection**（`vsxdt.evalSelection`）：
   - 在 `.code.js` 编辑器中执行已选中的 JavaScript（基于 Node `vm`）。
   - 将执行结果以引用块形式追加到选区后方。
-- **Input Inject Panel**（`devtools.showInputInjectDialog`）：
+- **Input Inject Panel**（`vsxdt.showInputInjectDialog`）：
   - 打开 Webview 面板，通过 CDP 向 Chrome 页面发送按键序列。
   - 使用 CSS 选择器定位可编辑元素，并输出详细日志。
 
 ## 运行要求
 
 - 建议 Node.js 20+
-- npm（或 pnpm）
+- [pnpm](https://pnpm.io/)
 - 启用远程调试端口的 Chrome / Chromium，例如：
 
 ```bash
@@ -23,35 +23,35 @@ google-chrome --remote-debugging-port=9222
 
 ## 扩展配置
 
-- `devtools.chromeHost`（默认：`127.0.0.1`）
-- `devtools.chromePort`（默认：`9222`）
-- `devtools.targetUrlIncludes`（默认：空字符串）
-- `devtools.maxResultLength`（默认：`20000`）
+- `vsxdt.chromeHost`（默认：`127.0.0.1`）
+- `vsxdt.chromePort`（默认：`9222`）
+- `vsxdt.targetUrlIncludes`（默认：空字符串）
+- `vsxdt.maxResultLength`（默认：`20000`）
 
 ## 开发
 
 安装依赖：
 
 ```bash
-npm install
+pnpm install
 ```
 
 构建：
 
 ```bash
-npm run compile
+pnpm run compile
 ```
 
 监听模式：
 
 ```bash
-npm run watch
+pnpm run watch
 ```
 
 打包 VSIX：
 
 ```bash
-npm run package
+pnpm run package
 ```
 
 ## 使用方式
@@ -75,7 +75,7 @@ dpkg-buildpackage -us -uc
 
 ## 许可证
 
-Copyright (C) 2026 Lenik <vscode-devtools@bodz.net>
+Copyright (C) 2026 Lenik <vsxdt@bodz.net>
 
 采用 **AGPL-3.0-or-later** 许可。  
 完整文本及项目补充条款见 `LICENSE`。

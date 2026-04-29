@@ -1,12 +1,12 @@
 {
-  "name": "vscode-devtools",
+  "name": "vsxdt",
   "displayName": "VSCode Develop Tools",
   "description": "Eval .code.js selections and inject inputs into a Chrome debugging target.",
   "version": "0.0.1",
   "publisher": "Lenik",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lenik/vscode-devtools.git"
+    "url": "https://github.com/lenik/vsxdt.git"
   },
   "engines": {
     "vscode": "^1.95.0"
@@ -16,81 +16,91 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "onLanguage:codejs",
-    "onCommand:devtools.evalSelection",
-    "onCommand:devtools.showInputInjectDialog"
+    "onCommand:vsxdt.evalSelection",
+    "onCommand:vsxdt.showInputInjectDialog",
+    "onCommand:vsxdt.toggleProxies"
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "languages": [
-      {
-        "id": "codejs",
-        "aliases": [
-          "Code JS",
-          "code.js"
-        ],
-        "extensions": [
-          ".code.js"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
     "commands": [
       {
-        "command": "devtools.evalSelection",
+        "command": "vsxdt.evalSelection",
         "title": "DevTools: Eval Selection"
       },
       {
-        "command": "devtools.showInputInjectDialog",
+        "command": "vsxdt.showInputInjectDialog",
         "title": "DevTools: Show Input Inject Dialog"
+      },
+      {
+        "command": "vsxdt.toggleProxies",
+        "title": "DevTools: Cycle Proxy"
       }
     ],
     "keybindings": [
       {
-        "command": "devtools.evalSelection",
+        "command": "vsxdt.evalSelection",
         "key": "f5",
-        "when": "editorTextFocus && editorHasSelection && editorLangId == codejs"
+        "when": "editorTextFocus && editorHasSelection && resourceFilename =~ /.*\\.code\\.js$/"
+      },
+      {
+        "command": "vsxdt.toggleProxies",
+        "key": "alt+shift+p"
       }
     ],
+    "configurationDefaults": {
+      "files.associations": {
+        "*.code.js": "javascript"
+      }
+    },
     "configuration": {
       "title": "VSCode DevTools Tools",
       "properties": {
-        "devtools.chromeHost": {
+        "vsxdt.chromeHost": {
           "type": "string",
           "default": "127.0.0.1",
           "description": "Chrome remote debugging host."
         },
-        "devtools.chromePort": {
+        "vsxdt.chromePort": {
           "type": "number",
           "default": 9222,
           "description": "Chrome remote debugging port."
         },
-        "devtools.targetUrlIncludes": {
+        "vsxdt.targetUrlIncludes": {
           "type": "string",
           "default": "",
           "description": "Optional substring used to choose a page target."
         },
-        "devtools.maxResultLength": {
+        "vsxdt.maxResultLength": {
           "type": "number",
           "default": 20000,
           "description": "Maximum formatted eval result length."
+        },
+        "vsxdt.proxyList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Proxy URLs used by DevTools: Cycle Proxy (vsxdt.toggleProxies) applies each entry to VS Code \"http.proxy\" in order, then clears it once after the last entry, then repeats."
         }
       }
     }
   },
   "scripts": {
+    "vscode:prepublish": "pnpm run bundle -- --production",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "bundle": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
     "@types/vscode": "^1.95.0",
-    "typescript": "^5.7.2",
-    "vsce": "^2.15.0"
+    "@vscode/vsce": "^3.8.0",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@vscode/vsce": "^3.8.0",
     "chrome-remote-interface": "^0.33.3"
   }
 }

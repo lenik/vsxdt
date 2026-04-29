@@ -1,20 +1,20 @@
-# vscode-devtools
+# vsxdt
 
-`vscode-devtools` is a VS Code extension for browser automation and quick JS evaluation while developing.
+`vsxdt` is a VS Code extension for browser automation and quick JS evaluation while developing.
 
 ## Features
 
-- **Eval Selection** (`devtools.evalSelection`):
+- **Eval Selection** (`vsxdt.evalSelection`):
   - Runs selected JavaScript from a `.code.js` editor using Node `vm`.
   - Appends the result directly after the selection as quoted output.
-- **Input Inject Panel** (`devtools.showInputInjectDialog`):
+- **Input Inject Panel** (`vsxdt.showInputInjectDialog`):
   - Opens a webview form to send keystroke sequences to a Chrome page over CDP.
   - Targets editable elements matched by a CSS selector and prints verbose logs.
 
 ## Requirements
 
 - Node.js 20+ recommended
-- npm (or pnpm)
+- [pnpm](https://pnpm.io/)
 - Google Chrome / Chromium started with remote debugging, e.g.:
 
 ```bash
@@ -23,35 +23,35 @@ google-chrome --remote-debugging-port=9222
 
 ## Extension settings
 
-- `devtools.chromeHost` (default: `127.0.0.1`)
-- `devtools.chromePort` (default: `9222`)
-- `devtools.targetUrlIncludes` (default: empty)
-- `devtools.maxResultLength` (default: `20000`)
+- `vsxdt.chromeHost` (default: `127.0.0.1`)
+- `vsxdt.chromePort` (default: `9222`)
+- `vsxdt.targetUrlIncludes` (default: empty)
+- `vsxdt.maxResultLength` (default: `20000`)
 
 ## Development
 
 Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 Build:
 
 ```bash
-npm run compile
+pnpm run compile
 ```
 
 Watch mode:
 
 ```bash
-npm run watch
+pnpm run watch
 ```
 
 Package VSIX:
 
 ```bash
-npm run package
+pnpm run package
 ```
 
 ## Usage
@@ -75,7 +75,7 @@ dpkg-buildpackage -us -uc
 
 ## License
 
-Copyright (C) 2026 Lenik <vscode-devtools@bodz.net>
+Copyright (C) 2026 Lenik <vsxdt@bodz.net>
 
 Licensed under **AGPL-3.0-or-later**.  
 See `LICENSE` for the full text and supplemental project terms.

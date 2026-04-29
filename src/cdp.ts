@@ -9,7 +9,7 @@ export interface ChromeTargetInfo {
 }
 
 export async function listPageTargets(): Promise<ChromeTargetInfo[]> {
-  const config = vscode.workspace.getConfiguration("devtools");
+  const config = vscode.workspace.getConfiguration("vsxdt");
   const host = config.get<string>("chromeHost", "127.0.0.1");
   const port = config.get<number>("chromePort", 9222);
 
@@ -25,12 +25,17 @@ export async function listPageTargets(): Promise<ChromeTargetInfo[]> {
 }
 
 export async function connectToPreferredTarget() {
-  const config = vscode.workspace.getConfiguration("devtools");
+  const config = vscode.workspace.getConfiguration("vsxdt");
   const host = config.get<string>("chromeHost", "127.0.0.1");
   const port = config.get<number>("chromePort", 9222);
   const urlIncludes = config.get<string>("targetUrlIncludes", "").trim();
 
-  const targets = await CDP.List({ host, port });
+  let targets;
+  try {
+    targets = await CDP.List({ host, port });
+  } catch {
+    throw new Error(`Cannot connect to Chrome debugging port (${host}:${port}).`);
+  }
   const pages = targets.filter(t => t.type === "page");
 
   const chosen =
@@ -42,11 +47,16 @@ export async function connectToPreferredTarget() {
     throw new Error("No Chrome page target found.");
   }
 
-  const client = await CDP({
-    host,
-    port,
-    target: chosen
-  });
+  let client;
+  try {
+    client = await CDP({
+      host,
+      port,
+      target: chosen
+    });
+  } catch {
+    throw new Error(`Cannot connect to Chrome debugging port (${host}:${port}).`);
+  }
 
   return {
     client,

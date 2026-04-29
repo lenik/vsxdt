@@ -13,8 +13,10 @@ function buildInjectScript(selector: string, inputs: string[]): string {
   const inputs = ${JSON.stringify(inputs)};
 
   function log(msg) { logs.push(String(msg)); }
+  log(\`selector: \${selector}\`);
 
   const elements = Array.from(document.querySelectorAll(selector));
+  log(\`matched elements: \${elements.length}\`);
   if (!elements.length) {
     return { ok: false, logs: [\`No elements matched selector: \${selector}\`] };
   }
@@ -109,6 +111,13 @@ function buildInjectScript(selector: string, inputs: string[]): string {
 }
 
 export async function inputInject(selector: string, inputs: string[]): Promise<InputInjectResult> {
+  if (!selector.trim()) {
+    return {
+      ok: false,
+      logs: ["selector is required."]
+    };
+  }
+
   const { client, target } = await connectToPreferredTarget();
   const logs: string[] = [];
 

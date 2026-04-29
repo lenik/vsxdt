@@ -81,7 +81,9 @@
 .parcel-cache/
 .project
 .settings
-.vscode/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 /.pomdirs
 ChangeLog
 CLAUDE.md
@@ -110,6 +112,7 @@ debian/ZEPHYR/
 debian/files
 depcomp
 dist/
+out/
 install-sh
 itree.tex
 libauto
@@ -121,7 +124,6 @@ meson-private/
 missing
 node_modules/
 nohup.out
-pnpm-lock.yaml
 rpmbuild/
 srcsheet.txt
 stamp-h1

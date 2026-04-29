@@ -1,0 +1,33 @@
+# extension host / dev only
+.vscode/**
+.vscode-test/**
+
+# source & build tooling (runtime is bundled in dist/)
+src/**
+esbuild.js
+tsconfig.json
+out/**
+
+# caches (e.g. tools writing under `.cache/` or `extension/.cache/`)
+**/.cache/**
+
+# local samples / drafts
+demo/**
+
+# repo / product docs not needed at runtime (README kept for Marketplace)
+.git/**
+.gitattributes
+.gitignore
+PRD.md
+README-zh.md
+
+# not wired in package.json contributes yet — include when registered under `languages`.
+language-configuration.json
+
+# optional: drop sourcemaps in published VSIX (smaller; harder to debug crashes)
+*.map
+
+# lockfile — install-time resolution is irrelevant inside the packaged extension
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
