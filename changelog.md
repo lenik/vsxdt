@@ -1,19 +1,19 @@
 # Changelog
 
-> **Generated:** `2026-04-29 06:25 UTC`
+> **Generated:** `2026-04-29 06:32 UTC`
 >
 > **Recipe:** `make changelog` · generator: [`scripts/log2md`](scripts/log2md).
 >
-> **Refs:** `edd4560` · branch `master` · latest commit date **2026-04-29**.
+> **Refs:** `88ea3ba` · branch `master` · latest commit date **2026-04-29**.
 >
 > **Working tree:** `/home/lenik/tasks/cursor/archive/vsxdt`
 
 | | |
 | :--- | :--- |
-| Commits (ancestors of HEAD) | 3 |
-| Distinct authors (`shortlog -sn` rows) | 1 |
+| Commits (ancestors of HEAD) | 4 |
+| Distinct authors (`shortlog -sn` rows) | 2 |
 | Remote (`origin`) | https://github.com/lenik/vsxdt |
-| Commits in this changelog | 3 |
+| Commits in this changelog | 4 |
 
 ---
 
@@ -28,7 +28,15 @@
 
 ### April 2026
 
-- **2026-04-29** [**edd45603e07d**](https://github.com/lenik/vsxdt/commit/edd45603e07df78bcf73e9ee58f6f31ef58e4b88) — Improve docs presentation and add reusable git-log changelog generator. — Lenik
+- **2026-04-29** [**88ea3bae1059**](https://github.com/lenik/vsxdt/commit/88ea3bae105922bda587cc7a5ca8cf0e4c8457cd) — Change demo video to a link — lenik
+
+    Updated demo section to link to video asset.
+
+---
+
+**v1.0.0**
+
+- **2026-04-29** [**34da2264106f**](https://github.com/lenik/vsxdt/commit/34da2264106f20b0b006a16277bf5813de344f90) — Improve docs presentation and add reusable git-log changelog generator. — Lenik
 
     This updates README/README-zh to foreground Cycle Proxy and demo media, wires the extension icon in package metadata, and introduces a reusable scripts/log2md + Makefile changelog workflow that renders full commit subjects/bodies into readable markdown from VCS history.
 
@@ -63,5 +71,5 @@
 
 ---
 
-> **Newest in this log:** `edd45603e07d` — Improve docs presentation and add reusable git-log changelog generator.
+> **Newest in this log:** `88ea3bae1059` — Change demo video to a link
 

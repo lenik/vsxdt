@@ -16,7 +16,7 @@ If `vsxdt.proxyList` is empty, the command reminds you to add entries.
 
 ## Demo
 
-<video src="./screens/screendemo.webm" controls muted autoplay loop playsinline width="800"></video>
+[screendemo.webm](https://github.com/user-attachments/assets/583bd84c-01c3-48b4-9dde-5885c84eb058)
 
 ## Features
 
