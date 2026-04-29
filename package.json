@@ -2,7 +2,8 @@
   "name": "vsxdt",
   "displayName": "VSCode Develop Tools",
   "description": "Eval .code.js selections and inject inputs into a Chrome debugging target.",
-  "version": "0.0.1",
+  "icon": "assets/icon.png",
+  "version": "1.0.0",
   "publisher": "Lenik",
   "repository": {
     "type": "git",

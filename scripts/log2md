@@ -1,0 +1,266 @@
+#!/usr/bin/env bash
+#
+# log2md — Markdown changelog from git history (stdout or file path argument).
+#
+#   scripts/log2md
+#   scripts/log2md changelog.md
+#
+# Env: LOG2MD_MAX=max commits (default 1000)
+#
+set -euo pipefail
+
+MAX_COMMITS="${LOG2MD_MAX:-1000}"
+OUT="${1:-}"
+
+resolve_github_commit_base() {
+  local origin p q
+  origin="$(git remote get-url origin 2>/dev/null || true)"
+  case "$origin" in
+    git@github.com:*)
+      p="${origin#*:}"
+      p="${p%.git}"
+      printf 'https://github.com/%s/commit' "${p:?}"
+      return
+      ;;
+    https://github.com/* | http://github.com/*)
+      q="${origin#*github.com/}"
+      q="${q%.git}"
+      q="${q%/}"
+      printf 'https://github.com/%s/commit' "${q:?}"
+      return
+      ;;
+    *)
+      printf ''
+      ;;
+  esac
+}
+
+toc_slug_from_heading() {
+  printf '%s' "${1:?}" |
+    LC_ALL=C tr '[:upper:]' '[:lower:]' |
+    tr -cs 'a-z0-9' '-' |
+    sed 's/^-//; s/-$//; s/--/-/g'
+}
+
+pretty_month_heading() {
+  local ym="$1" lbl
+  if lbl="$(LC_ALL=C date -d "${ym}-01" +'%B %Y' 2>/dev/null)"; then
+    printf '%s' "$lbl"
+  else
+    printf '%s' "$ym"
+  fi
+}
+
+md_escape_inline() {
+  local s="${1:-}"
+  printf '%s' "$s" | sed -e 's/\\/\\\\/g' -e 's/`/\\\`/g'
+}
+
+commit_link_markdown() {
+  local short="$1" full="$2"
+  if [[ -n "$COMMIT_URL_BASE" ]]; then
+    printf -- '[**%s**](%s/%s)' "$short" "$COMMIT_URL_BASE" "$full"
+  else
+    printf '`%s`' "${short:?}"
+  fi
+}
+
+# Print body lines with 4-space indent (preserve blank lines loosely).
+emit_body_indent() {
+  local body="${1:-}"
+  [[ "${body//$'\r'/}" =~ [^[:space:]] ]] || return 0
+  local line=""
+  printf '\n'
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    if [[ -z "$line" ]]; then
+      printf '\n'
+      continue
+    fi
+    printf '    %s\n' "$line"
+  done < <(printf '%s\n' "$body")
+}
+
+# First tag pointing at REV, preferring semver-like names (%d.%d…) when multiple.
+pick_tag_at_rev() {
+  local rev="$1"
+  local tg
+  if ! tg="$(git tag --points-at "${rev:?}" 2>/dev/null)"; then
+    return 1
+  fi
+  [[ -n "$tg" ]] || return 1
+  local chosen=""
+  chosen="$(printf '%s\n' "$tg" | LC_ALL=C grep -E '^v?[0-9]+(\.[0-9]+)+' | LC_ALL=C sort -V | head -n1)"
+  [[ -n "$chosen" ]] || chosen="$(printf '%s\n' "$tg" | LC_ALL=C sort -V | head -n1)"
+  printf '%s' "$chosen"
+}
+
+COMMIT_URL_BASE=""
+COMMIT_URL_BASE="$(resolve_github_commit_base || true)"
+
+REV_COUNT="0"
+REV_COUNT="$(git rev-list --count HEAD 2>/dev/null)" || REV_COUNT="0"
+
+AUTHOR_ROWS="0"
+AUTHOR_ROWS="$(git shortlog -sn HEAD 2>/dev/null | wc -l)"
+AUTHOR_ROWS="$(printf '%s' "$AUTHOR_ROWS" | tr -dc '0-9')"
+AUTHOR_ROWS="${AUTHOR_ROWS:-0}"
+
+LAST_DATE=""
+LAST_DATE="$(git log -1 --date=short --pretty=format:'%cd' 2>/dev/null)" || LAST_DATE="-"
+
+GIT_DESC=""
+GIT_DESC="$(git describe --always --dirty 2>/dev/null)" || GIT_DESC="-"
+
+GIT_BRANCH=""
+GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)" || GIT_BRANCH="-"
+
+NOW_UTC=""
+NOW_UTC="$(LC_ALL=C date -u +'%Y-%m-%d %H:%M UTC')"
+
+REMOTE_VIEW="${COMMIT_URL_BASE%/commit}"
+if [[ -z "$REMOTE_VIEW" ]]; then
+  REMOTE_VIEW="*(no github.com remote — hashes only)*"
+fi
+
+WORKDIR="$(pwd)"
+tmpdir=""
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/vsxdt-log2md.XXXXXX")"
+cleanup() { rm -rf "${tmpdir:?}"; }
+trap cleanup EXIT
+
+REVS_FILE="$tmpdir/revs.txt"
+TOC_TXT="$tmpdir/toc.md"
+SECTIONS_MD="$tmpdir/sections.md"
+
+if git rev-list --no-commit-header -n "${MAX_COMMITS}" HEAD >"$REVS_FILE" 2>/dev/null; then
+  :
+elif git rev-list -n "${MAX_COMMITS}" HEAD >"$REVS_FILE"; then
+  :
+else
+  echo "log2md: git rev-list failed in ${WORKDIR:-.}" >&2
+  exit 1
+fi
+
+# --- Months for TOC (order = first occurrence in rev-list = newest commits first).
+
+MONTH_KEYS_FILE="$tmpdir/month-keys.txt"
+: >"$MONTH_KEYS_FILE"
+_seen_month=""
+while read -r _rev || [[ -n "${_rev:-}" ]]; do
+  [[ -z "${_rev:-}" ]] && continue
+  _d="$(git log -1 --date=short --pretty=format:%cd "${_rev}" 2>/dev/null)" || continue
+  _ym="$(printf '%s\n' "$_d" | cut -c1-7)"
+  [[ "${_seen_month}" == *"|${_ym}|"* ]] && continue
+  printf '%s\n' "$_ym" >>"$MONTH_KEYS_FILE"
+  _seen_month+="|${_ym}|"
+done <"$REVS_FILE"
+
+{
+  printf '\n%s\n\n' "## Contents"
+  while read -r ym; do
+    [[ -z "$ym" ]] && continue
+    heading="$(pretty_month_heading "$ym")"
+    slug="$(toc_slug_from_heading "$heading")"
+    printf -- '- [%s](#%s)\n' "${heading:?}" "${slug:?}"
+  done <"$MONTH_KEYS_FILE"
+  printf '%s\n' ""
+} >"$TOC_TXT"
+
+# --- History: full message (subject + body), newest first; tag line before tagged commit.
+
+mapfile -t REVS <"$REVS_FILE"
+REV_LEN="${#REVS[@]}"
+
+if [[ "${REV_LEN}" -eq 0 ]]; then
+  echo "log2md: no commits?" >&2
+  exit 1
+fi
+
+: >"$SECTIONS_MD"
+_prev_m=""
+_last_idx=$((REV_LEN - 1))
+
+emit_one_commit_block() {
+  local rev="$1"
+  local date_full short_sha subject_raw body_txt author ym month_title hl subj_esc
+
+  # Never use `-- <rev>` here: Git treats argv after `--` as pathspecs, not commits.
+  date_full="$(git log -1 --date=short --pretty=format:%cd "${rev}" 2>/dev/null)" || date_full=""
+  short_sha="$(git rev-parse --short=12 "${rev}" 2>/dev/null)" || short_sha=""
+  subject_raw="$(git log -1 --pretty=format:%s "${rev}" 2>/dev/null)" || subject_raw=""
+  body_txt="$(git log -1 --pretty=format:%b "${rev}" 2>/dev/null)" || body_txt=""
+  author="$(git log -1 --pretty=format:%aN "${rev}" 2>/dev/null)" || author=""
+
+  ym="$(printf '%s\n' "$date_full" | cut -c1-7)"
+  month_title="$(pretty_month_heading "$ym")"
+
+  if [[ "$ym" != "$_prev_m" ]]; then
+    if [[ -n "$_prev_m" ]]; then
+      printf '\n%s\n' "---" >>"$SECTIONS_MD"
+    fi
+    printf '\n%s\n\n' "### ${month_title}" >>"$SECTIONS_MD"
+    _prev_m="$ym"
+  fi
+
+  subj_esc="$(md_escape_inline "$subject_raw")"
+  hl="$(commit_link_markdown "$short_sha" "$rev")"
+  printf -- '- **%s** %s — %s — %s\n' "$date_full" "$hl" "$subj_esc" "$author" >>"$SECTIONS_MD"
+  emit_body_indent "$body_txt" >>"$SECTIONS_MD"
+}
+
+emit_tagdivider_before_rev() {
+  local next_rev="$1"
+  local t
+  if t="$(pick_tag_at_rev "${next_rev}")"; then
+    printf '\n%s\n\n' "---" >>"$SECTIONS_MD"
+    printf '%s\n\n' "**${t}**" >>"$SECTIONS_MD"
+  fi
+}
+
+for idx in "${!REVS[@]}"; do
+  rev="${REVS[idx]}"
+  emit_one_commit_block "$rev"
+  next_rev=""
+  [[ $((idx)) -lt "$_last_idx" ]] && next_rev="${REVS[$((idx + 1))]}"
+  if [[ -n "$next_rev" ]]; then
+    emit_tagdivider_before_rev "$next_rev"
+  fi
+done
+
+printf '\n' >>"$SECTIONS_MD"
+
+NEWEST_TAIL=""
+NEWEST_TAIL="$(git log -1 --pretty='%s' "${REVS[0]}" 2>/dev/null)"
+NEW_REV_SHORT=""
+NEW_REV_SHORT="$(git rev-parse --short=12 "${REVS[0]}" 2>/dev/null)"
+
+OUT_MD="$tmpdir/changelog.md"
+{
+  printf '%s\n\n' "# Changelog"
+  printf '> **Generated:** `%s`\n>\n> **Recipe:** `make changelog` · generator: [`scripts/log2md`](scripts/log2md).\n>\n> **Refs:** `%s` · branch `%s` · latest commit date **%s**.\n>\n> **Working tree:** `%s`\n\n' \
+    "$NOW_UTC" "$GIT_DESC" "$GIT_BRANCH" "$LAST_DATE" "$WORKDIR"
+  printf '%s\n' "| | |"
+  printf '%s\n' "| :--- | :--- |"
+  printf '| %s | %s |\n' "Commits (ancestors of HEAD)" "$REV_COUNT"
+  printf '| %s | %s |\n' "Distinct authors (\`shortlog -sn\` rows)" "${AUTHOR_ROWS:-0}"
+  printf '| %s | %s |\n' "Remote (\`origin\`)" "${REMOTE_VIEW}"
+  printf '| %s | %s |\n' "Commits in this changelog" "${REV_LEN}"
+  printf '%s\n' ""
+  printf '%s\n' "---"
+
+  cat "$TOC_TXT"
+  printf '%s\n' "---"
+
+  printf '\n%s\n\n' "## History"
+  cat "$SECTIONS_MD"
+
+  printf '%s\n' "---"
+  printf '\n> **Newest in this log:** `%s` — %s\n\n' "${NEW_REV_SHORT:-?}" "$(md_escape_inline "${NEWEST_TAIL:-}")"
+} >"$OUT_MD"
+
+if [[ -n "$OUT" ]]; then
+  cp -f "$OUT_MD" "$OUT"
+else
+  cat "$OUT_MD"
+fi
